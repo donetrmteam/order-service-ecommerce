@@ -1,29 +1,40 @@
+// orders.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { OrdersService } from './orders.service';
 import { OrdersController } from './orders.controller';
 import { Order } from './entities/order.entity';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order]),
-    ClientsModule.register([
+    ConfigModule, // importar si no es global
+    ClientsModule.registerAsync([
       {
         name: 'CART_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 3003,
-        },
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('CART_SERVICE_HOST'),
+            port: configService.get<number>('CART_SERVICE_PORT'),
+          },
+        }),
       },
       {
         name: 'PRODUCT_SERVICE',
-        transport: Transport.TCP,
-        options: {
-          host: 'localhost',
-          port: 3002,
-        },
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get<string>('PRODUCT_SERVICE_HOST'),
+            port: configService.get<number>('PRODUCT_SERVICE_PORT'),
+          },
+        }),
       },
     ]),
   ],
@@ -31,4 +42,4 @@ import { Order } from './entities/order.entity';
   providers: [OrdersService],
   exports: [OrdersService, ClientsModule],
 })
-export class OrdersModule {} 
+export class OrdersModule {}
