@@ -18,7 +18,7 @@ async function bootstrap() {
   });
 
   app.listen().then(() => {
-    logger.log('Order Service is listening on port 3004');
+    logger.log('Order Service is listening on port '+ process.env.TCP_PORT);
   });
 }
 bootstrap();
